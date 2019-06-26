@@ -1,6 +1,8 @@
 import React from 'react';
+import {ImagePicker} from 'expo';
+
 import {Image, ScrollView, StyleSheet, View} from 'react-native';
-import {Button, Input} from "react-native-elements";
+import {Button, Icon, Input} from "react-native-elements";
 import {updateSupply} from "../services/SuppliesService";
 
 
@@ -8,8 +10,32 @@ export default class SupplyEdit extends React.Component {
 
     state = {
         isShowingText: true,
-        supply: this.props.navigation.getParam("supply")
+        supply: this.props.navigation.getParam("supply"),
+        modalVisible: false,
+        pickerResult: null
     };
+
+
+    _pickImg = async () => {
+        let pickerResult = await ImagePicker.launchImageLibraryAsync({
+            base64: true,
+            allowsEditing: false,
+            aspect: [4, 3],
+        });
+
+        this.setState({
+            ...this.state,
+            supply: {
+                ...this.state.supply,
+                image: pickerResult ? `data:image/jpg;base64,${pickerResult.base64}` : null
+            },
+        });
+    };
+
+
+    setModalVisible(visible) {
+        this.setState({modalVisible: visible});
+    }
 
 
     static navigationOptions = {
@@ -19,42 +45,56 @@ export default class SupplyEdit extends React.Component {
     onPressSave = () => {
         const {goBack} = this.props.navigation;
         this.props.navigation.state.params.onGoBack();
+
         const newSupply = {
             name: this.state.supply.name,
             state: this.state.supply.state,
-            description: this.state.supply.description
+            description: this.state.supply.description,
+            image: this.state.supply.image
         }
         updateSupply(this.state.supply.id, newSupply)
         goBack()
     }
 
+
     render() {
+
         const {supply} = this.state
         return (
             <View style={styles.container}>
                 <ScrollView style={styles.container}>
                     {this.state.supply && <View style={styles.mainView}>
-                        <View style={styles.imageContainer}>
+                        <View style={styles.firstBlock}>
+                            <View style={styles.imageContainer}>
                             <Image
-                                source={{uri: 'https://via.placeholder.com/150'}}
+                                source={{uri: this.state.supply.image ? this.state.supply.image : 'https://via.placeholder.com/150'}}
                                 resizeMode="contain"
                                 fadeDuration={0}
                                 style={styles.image}
                             />
+                            </View>
+                            <Icon
+                                name="camera"
+                                type='font-awesome'
+                                size={20}
+                                color="black"
+                                onPress={this._pickImg}
+                            />
                         </View>
+
                         <Input inputStyle={styles.optionsTitleText}
                                onChange={(e) => {
                                    this.setState({supply: {...supply, name: e.nativeEvent.text}})
                                }}
                                value={supply.name}
-                               label={"Name"}
+                               label={"Name:"}
                         />
                         <View style={styles.row}>
                             <View style={{flex: 1}}>
 
                                 <Input inputStyle={styles.optionText}
                                        value={supply.id.toString()}
-                                       label={"Id"}
+                                       label={"Id:"}
                                        editable={false}
                                 />
 
@@ -63,14 +103,14 @@ export default class SupplyEdit extends React.Component {
                                            this.setState({supply: {...supply, state: e.nativeEvent.text}})
                                        }}
                                        value={supply.state}
-                                       label={"State"}
+                                       label={"State:"}
                                 />
                                 <Input inputStyle={styles.optionText}
                                        onChange={(e) => {
                                            this.setState({supply: {...supply, description: e.nativeEvent.text}})
                                        }}
                                        value={supply.description}
-                                       label={"Description"}
+                                       label={"Description:"}
                                 />
                             </View>
 
@@ -91,6 +131,11 @@ const styles = StyleSheet.create({
         paddingRight: 20,
         paddingLeft: 20
     },
+    firstBlock: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     imageContainer: {
         flexDirection: 'column',
         justifyContent: 'center',
@@ -108,7 +153,6 @@ const styles = StyleSheet.create({
     },
     optionsTitleText: {
         fontSize: 18,
-        // marginBottom: 12,
     },
     optionText: {
         fontSize: 15,
@@ -121,5 +165,11 @@ const styles = StyleSheet.create({
     },
     row: {
         flexDirection: 'row',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 8,
     }
 });
