@@ -5,7 +5,7 @@ django-rest-auth==0.9.3
 djangorestframework-jwt==1.11.0
 django-allauth==0.39.1
 PyQRCode==1.2.1
-Pillow==5.1.0
+Pillow==6.2.0
 pypng==0.0.18
 djangorestframework-csv==2.1.0
 fpdf==1.7.2
